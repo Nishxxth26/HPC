@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+
+int main() {
+    int i,j,N;
+    int *A,*B,*C;
+
+    printf("Enter size of array:");
+    scanf("%d",&N);
+
+    // Allocate memory
+    A = (int*) malloc(N * sizeof(int));
+    B = (int*) malloc(N * sizeof(int));
+    C = (int*) malloc(N * sizeof(int));
+
+    for(i = 0; i < N; i++){
+            A[i]=rand()%5;
+            B[i]=rand()%5;
+    }
+
+
+    printf("Input:\nA: ");
+    for(i=0;i<N;i++){
+            printf("%d ",A[i]);
+    }
+    printf("\nB: ");
+    for(i=0;i<N;i++){
+            printf("%d ", B[i]);
+    }
+
+    // Parallel loop to add constant
+    #pragma omp parallel for
+    for(i = 0; i < N; i++) {
+            C[i] = A[i] + B[i];
+    }
+    printf("\nOutput:\nC: ");
+
+    // Print sample output
+    for(i = 0; i < N; i++) {
+            printf("%d ",C[i]);
+    }
+
+    printf("\n");
+    // Free memory
+    free(A);
+
+    return 0;
+}
+[23bcs110@mepcolinux ex8]$./add
+Enter size of array:10
+Input:
+A: 3 2 3 1 4 2 0 3 0 2
+B: 1 0 0 2 1 2 4 1 1 1
+Output:
+C: 4 2 3 3 5 4 4 4 1 3
+[23bcs110@mepcolinux ex8]$cat const.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <omp.h>
+
+int main() {
+    int i,N,CONST_VAL;
+    int *A;
+
+    printf("Enter no of elements:");
+    scanf("%d",&N);
+
+    // Allocate memory
+    A = (int*) malloc(N * sizeof(int));
+
+    // Initialize array
+    for(i = 0; i < N; i++) {
+        A[i] = rand()%10;
+    }
+    printf("Enter const value to be added: ");
+    scanf("%d",&CONST_VAL);
+
+    printf("\nInput taken : ");
+    for(i = 0;i < N;i++){
+            printf("%d ",A[i]);
+    }
+
+    // Parallel loop to add constant
+    #pragma omp parallel for
+    for(i = 0; i < N; i++) {
+        A[i] = A[i] + CONST_VAL;
+    }
+
+    // Print sample output
+    printf("\nOutput given: ");
+    for(i = 0; i < N; i++) {
+        printf("%d ", A[i]);
+    }
+
+    printf("\n");
+    // Free memory
+    free(A);
+
+    return 0;
+}
