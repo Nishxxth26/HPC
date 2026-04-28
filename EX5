@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <pthread.h>
+
+#define MAX 10
+
+int A[MAX][MAX], B[MAX][MAX];
+int add[MAX][MAX], mul[MAX][MAX];
+int n;
+
+/* Thread function for Matrix Addition */
+void* matrix_addition(void* arg) {
+    int i, j;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            add[i][j] = A[i][j] + B[i][j];
+        }
+    }
+    pthread_exit(NULL);
+}
+
+/* Thread function for Matrix Multiplication */
+void* matrix_multiplication(void* arg) {
+    int i, j, k;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            mul[i][j] = 0;
+            for (k = 0; k < n; k++) {
+                mul[i][j] += A[i][k] * B[k][j];
+            }
+        }
+    }
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t t1, t2;
+    int i, j;
+
+    printf("Enter matrix size (N): ");
+    scanf("%d", &n);
+
+    printf("\nEnter Matrix A:\n");
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            scanf("%d", &A[i][j]);
+
+    printf("\nEnter Matrix B:\n");
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++)
+            scanf("%d", &B[i][j]);
+
+    /* Create threads */
+    pthread_create(&t1, NULL, matrix_addition, NULL);
+    pthread_create(&t2, NULL, matrix_multiplication, NULL);
+
+    /* Wait for threads to finish */
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+
+    printf("\nMatrix Addition Result:\n");
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++)
+            printf("%d ", add[i][j]);
+        printf("\n");
+    }
+
+    printf("\nMatrix Multiplication Result:\n");
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++)
+            printf("%d ", mul[i][j]);
+        printf("\n");
+    }
+
+    return 0;
+}
+
+
+
+student@cil31:~$ gcc 3.c -o out -pthread
+student@cil31:~$ ./out
+Enter matrix size (N): 3
+
+Enter Matrix A:
+11 12 13
+55 33 22
+55 88 66
+
+Enter Matrix B:
+44 23 21
+99
+66
+55
+67 88 83
+
+Matrix Addition Result:
+55 35 34
+154 99 77
+122 176 149
+
+Matrix Multiplication Result:
+2543 2189 1970
+7161 5379 4796
+15554 12881 11473
+
+[23bcs110@mepcolinux ex5]$cat 2.c
+#include <stdio.h>
+#include <pthread.h>
+
+int sum = 0;
+int n;
+
+/* Thread function */
+void* find_sum(void* arg) {
+    int i;
+    for (i = 1; i <= n; i++) {
+        sum += i;
+    }
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t t;
+
+    printf("Enter a number: ");
+    scanf("%d", &n);
+
+    pthread_create(&t, NULL, find_sum, NULL);
+    pthread_join(t, NULL);
+
+    printf("Sum of first %d numbers = %d\n", n, sum);
+
+    return 0;
+}
+
+
+
+student@cil31:~$ gcc 1.c -o out -pthread
+student@cil31:~$ ./out
+Enter a number: 7
+Sum of first 7 numbers = 28
+
+[23bcs110@mepcolinux ex5]$cat 3.c
+#include <stdio.h>
+#include <pthread.h>
+
+/* Thread function */
+void* greeting(void* arg) {
+    printf("Hello! Greetings from Child Thread.\n");
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t t;
+
+    printf("Greetings from Main Thread.\n");
+
+    pthread_create(&t, NULL, greeting, NULL);
+    pthread_join(t, NULL);
+
+    printf("Main Thread finished execution.\n");
+    return 0;
+}
+
+
+
+
