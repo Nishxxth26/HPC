@@ -1,0 +1,98 @@
+#include<stdio.h>
+#include<mpi.h>
+int main(int argc,char*argv[])
+{
+        int rank,size;
+        MPI_Init(&argc,&argv);
+        MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+        MPI_Comm_size(MPI_COMM_WORLD,&size);
+        printf("hello from process %d out of %d process\n",rank,size);
+        MPI_Finalize();
+        return 0;
+}
+
+
+
+ada@ada:~$ mpicc 1.c
+ada@ada:~$ mpiexec -n 4 ./a.out
+hello from process 0 out of 4 process
+hello from process 2 out of 4 process
+hello from process 3 out of 4 process
+hello from process 1 out of 4 process
+ada@ada:~$ cat 1.c
+
+[23bcs110@mepcolinux ex2]$cat 2.c
+#include <mpi.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 100
+
+int ispalindrome(char str[]) {
+    int i, len = strlen(str);
+    for (i = 0; i < len / 2; i++) {
+        if (str[i] != str[len - i - 1])
+            return 0;
+    }
+    return 1;
+}
+
+int main(int argc, char *argv[]) {
+    int rank, size;
+    char msg[MAX];
+    char input_words[4][MAX] = {"racecar", "hello", "madam", "world"};
+    MPI_Status status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 0) {
+        for (int i = 1; i < size; i++) {
+            int target_tag = (i % 2 == 1) ? 1 : 2;
+            MPI_Send(input_words[i-1], MAX, MPI_CHAR, i, target_tag, MPI_COMM_WORLD);
+        }
+
+        for (int i = 1; i < size; i++) {
+            MPI_Recv(msg, MAX, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            printf("Rank 0 received: %s\n", msg);
+        }
+    }
+    else {
+        MPI_Recv(msg, MAX, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+        char result[MAX];
+        if (status.MPI_TAG == 1) {
+            for (int j = 0; msg[j]; j++) msg[j] = toupper(msg[j]);
+            sprintf(result, "Upper: %s", msg);
+        }
+        else {
+            if (ispalindrome(msg))
+                sprintf(result, "%s is a palindrome", msg);
+            else
+                sprintf(result, "%s is not a palindrome", msg);
+        }
+
+        MPI_Send(result, MAX, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+    }
+
+    MPI_Finalize();
+    return 0;
+}
+
+
+
+ada@ada:~$ mpiexec -n 4 ./a.out
+ Rank received : hello is not a palindrome
+ Rank received : Upper: RACECAR
+ Rank received : Upper: MADAM
+ada@ada:~$ mpiexec -n 3 ./a.out
+ Rank received : Upper: RACECAR
+ Rank received : hello is not a palindrome
+
+[23bcs110@mepcolinux ex2]$exit
+exit
+
+Script done on Tuesday 20 January 2026 12:00:57 PM IST
+[23bcs110@mepcolinux ex2]$3
