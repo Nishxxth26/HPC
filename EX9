@@ -1,0 +1,113 @@
+#include <stdio.h>
+#include <omp.h>
+#include <limits.h>
+
+int main() {
+    int n, max_val;
+
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+
+    int collection[n];
+    printf("Enter %d integers:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &collection[i]);
+    }
+    max_val = INT_MIN;
+    #pragma omp parallel for reduction(max:max_val)
+    for (int i = 0; i < n; i++) {
+        if (collection[i] > max_val) {
+            max_val = collection[i];
+        }
+    }
+
+    printf("\nThe maximum element is: %d\n", max_val);
+
+    return 0;
+}
+
+[23bcs110@mepcolinux ex9]$./m
+Enter the number of elements: 5
+Enter 5 integers:
+66
+33
+44
+22
+12
+
+The maximum element is: 66
+[23bcs110@mepcolinux ex9]$cat t.c
+#include <stdio.h>
+#include <omp.h>
+
+int main() {
+    int n, target, count = 0;
+
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+    int collection[n];
+
+    printf("Enter %d integers:\n", n);
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &collection[i]);
+    }
+    printf("Enter the target value: ");
+    scanf("%d", &target);
+    #pragma omp parallel for reduction(+:count)
+    for (int i = 0; i < n; i++) {
+        if (collection[i] < target) {
+            count++;
+        }
+    }
+
+    printf("\nTotal values less than %d: %d\n", target, count);
+
+    return 0;
+}
+
+[23bcs110@mepcolinux ex9]$./t
+Enter the number of elements: 5
+Enter 5 integers:
+6
+4
+3
+9
+8
+Enter the target value: 8
+
+Total values less than 8: 3
+[23bcs110@mepcolinux ex9]$cat trap.c
+#include <stdio.h>
+#include <omp.h>
+
+double f(double x) {
+    return x * x;
+}
+
+int main() {
+    double a, b, h, global_total = 0.0;
+    int n;
+
+    printf("Enter a, b, and n: ");
+    scanf("%lf %lf %d", &a, &b, &n);
+
+    h = (b - a) / n;
+    global_total = (f(a) + f(b)) / 2.0;
+
+    double local_sum = 0.0;
+
+    #pragma omp parallel for reduction(+:local_sum)
+    for (int i = 1; i <= n - 1; i++) {
+        local_sum += f(a + i * h);
+    }
+    #pragma omp critical
+    {
+        global_total += local_sum;
+    }
+
+    global_total = global_total * h;
+
+    printf("\nResult: %f\n", global_total);
+
+    return 0;
+}
